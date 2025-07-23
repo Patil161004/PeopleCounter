@@ -1,27 +1,37 @@
 # Configuration file for People Counter App
+import os
 
-# YOLO Model Configuration
-# Options: 'yolov8n.pt' (fastest), 'yolov8s.pt' (balanced), 'yolov8m.pt' (most accurate)
-YOLO_MODEL = 'yolov8s.pt'  # Using small model for balanced speed/accuracy
+# Environment detection
+IS_PRODUCTION = os.environ.get('RENDER') or os.environ.get('PORT')
 
-# Detection confidence threshold (0.0 to 1.0)
-CONFIDENCE_THRESHOLD = 0.3  # Optimized threshold
+# EfficientDet Configuration
+CONFIDENCE_THRESHOLD = 0.23  # Optimized threshold for people detection
+EFFICIENTDET_MODEL_URL = 'https://tfhub.dev/tensorflow/efficientdet/d1/1'
 
-# Model priority: 'inception' (your trained model), 'ensemble', 'yolo', 'efficientdet'
-PRIMARY_MODEL = 'inception'  # Prioritize your custom trained model
-
-# Maximum file size in MB
-MAX_FILE_SIZE = 16
-
-# Allowed image extensions
+# File upload settings
+MAX_FILE_SIZE = 50 if IS_PRODUCTION else 16  # MB
 ALLOWED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff']
 
+# Directory configuration
+if IS_PRODUCTION:
+    # Production paths (Render uses /tmp for temporary files)
+    UPLOAD_FOLDER = '/tmp/uploads'
+    PROCESSED_FOLDER = '/tmp/processed'
+    RESULTS_FOLDER = '/tmp/results'
+    DEBUG_MODE = False
+else:
+    # Local development paths
+    UPLOAD_FOLDER = 'uploads'
+    PROCESSED_FOLDER = 'processed'
+    RESULTS_FOLDER = 'results'
+    DEBUG_MODE = True
+
 # Flask configuration
-DEBUG_MODE = True
+PORT = int(os.environ.get('PORT', 5000))
 HOST = '0.0.0.0'
 PORT = 5000
 
 # Directory names
 UPLOAD_FOLDER = 'uploads'
 PROCESSED_FOLDER = 'processed'
-RESULTS_FOLDER = 'results'
+RESULTS_FOLDER = 'results' 

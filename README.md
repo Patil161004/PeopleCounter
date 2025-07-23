@@ -44,3 +44,13 @@ A Flask web application that uses EfficientDet for accurate people counting in i
 - **Framework**: Flask with Bootstrap UI
 
 The application automatically downloads the EfficientDet model on first run and provides highly accurate people detection for both individual photos and crowded scenes.
+
+## 🚀 Deployment
+
+This application is ready for deployment on Render.com. See `DEPLOYMENT_GUIDE.md` for complete deployment instructions.
+
+### Quick Deployment Steps:
+1. Push code to GitHub
+2. Connect GitHub repo to Render
+3. Deploy with one click
+4. Access your app worldwide at `https://your-app-name.onrender.com`

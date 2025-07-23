@@ -10,9 +10,10 @@ import config
 from advanced_detection import count_people_smart_hybrid, initialize_efficientdet
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 # Configuration
+app.config['MAX_CONTENT_LENGTH'] = config.MAX_FILE_SIZE * 1024 * 1024
 UPLOAD_FOLDER = config.UPLOAD_FOLDER
 PROCESSED_FOLDER = config.PROCESSED_FOLDER
 RESULTS_FOLDER = config.RESULTS_FOLDER
@@ -21,7 +22,7 @@ ALLOWED_EXTENSIONS = set(config.ALLOWED_EXTENSIONS)
 # Create directories
 for folder in [UPLOAD_FOLDER, PROCESSED_FOLDER, RESULTS_FOLDER]:
     if not os.path.exists(folder):
-        os.makedirs(folder)
+        os.makedirs(folder, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -190,4 +191,10 @@ if __name__ == '__main__':
     print("✅ OpenCV methods ready (Fallback)")
     print("")
     print("🌐 Starting Flask application...")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # Use config-based settings
+    app.run(
+        debug=config.DEBUG_MODE, 
+        host='0.0.0.0', 
+        port=config.PORT
+    )
