@@ -1,10 +1,17 @@
 # 🚀 Render Deployment Guide
 
 ## Files Created for Deployment:
-- ✅ `requirements_render.txt` - Production dependencies
+- ✅ `requirements_render.txt` - Production dependencies (updated for Python 3.9)
+- ✅ `requirements_render_cpu.txt` - Alternative CPU-only TensorFlow
+- ✅ `runtime.txt` - Specifies Python 3.9.18
 - ✅ `wsgi.py` - Production entry point
 - ✅ `render.yaml` - Render configuration
 - ✅ `config.py` - Updated for production/local environments
+
+## 🔧 Fixed Build Issues:
+- ✅ Added `runtime.txt` to specify Python 3.9.18
+- ✅ Updated TensorFlow to version 2.15.0 (compatible)
+- ✅ Updated all dependencies for compatibility
 
 ## 📋 Pre-Deployment Checklist:
 - ✅ All necessary files created
@@ -47,8 +54,10 @@ git push -u origin main
    - **Name**: `people-counter-app` (or your choice)
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements_render.txt`
-   - **Start Command**: `gunicorn wsgi:app`
+   - **Start Command**: `gunicorn wsgi:app --bind 0.0.0.0:$PORT`
    - **Plan**: Select "Free"
+   
+   **Alternative if build fails**: Use `requirements_render_cpu.txt` instead
 
 4. **Deploy**
    - Click "Create Web Service"
@@ -71,10 +80,22 @@ git push -u origin main
 
 ### 5. Troubleshooting
 
-If deployment fails, check:
-- Build logs in Render dashboard
+If deployment fails, try these fixes:
+
+**Build Error Fix (Python/TensorFlow compatibility):**
+1. The build failed because Python 3.13.4 is too new for TensorFlow
+2. I've added `runtime.txt` to force Python 3.9.18
+3. Updated TensorFlow to version 2.15.0
+
+**If still failing:**
+- In Render dashboard, change Build Command to: `pip install -r requirements_render_cpu.txt`
+- Check build logs for specific error messages
+- Verify all files are committed to GitHub
+
+**Common issues:**
+- Build logs in Render dashboard will show exact errors
 - Make sure all files are committed to GitHub
-- Verify requirements_render.txt has all dependencies
+- Verify the runtime.txt file is included
 
 ## 🌐 Accessing Your App
 
