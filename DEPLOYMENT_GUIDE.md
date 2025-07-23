@@ -57,7 +57,9 @@ git push -u origin main
    - **Start Command**: `gunicorn wsgi:app --bind 0.0.0.0:$PORT`
    - **Plan**: Select "Free"
    
-   **Alternative if build fails**: Use `requirements_render_cpu.txt` instead
+   **If build fails, try these alternatives:**
+   - Build Command: `pip install -r requirements_minimal.txt`
+   - Or: `pip install -r requirements_render_cpu.txt`
 
 4. **Deploy**
    - Click "Create Web Service"
@@ -80,22 +82,28 @@ git push -u origin main
 
 ### 5. Troubleshooting
 
-If deployment fails, try these fixes:
+**Current Build Error Fix:**
+The issue is Render is using Python 3.13.4 and ignoring our runtime.txt. Here are the solutions:
 
-**Build Error Fix (Python/TensorFlow compatibility):**
-1. The build failed because Python 3.13.4 is too new for TensorFlow
-2. I've added `runtime.txt` to force Python 3.9.18
-3. Updated TensorFlow to version 2.15.0
+**Option 1: Force Build Command (Recommended)**
+In Render dashboard, change Build Command to:
+```
+pip install --upgrade pip && pip install -r requirements_minimal.txt
+```
 
-**If still failing:**
-- In Render dashboard, change Build Command to: `pip install -r requirements_render_cpu.txt`
-- Check build logs for specific error messages
-- Verify all files are committed to GitHub
+**Option 2: Manual Override**
+1. Go to your Render service settings
+2. Change Build Command to: `pip install Flask gunicorn tensorflow tensorflow-hub opencv-python-headless numpy pandas openpyxl Pillow Werkzeug`
+3. This installs latest compatible versions
+
+**Option 3: Docker Deployment**
+1. In Render, choose "Docker" instead of "Python"
+2. It will use our Dockerfile with Python 3.11.8
 
 **Common issues:**
-- Build logs in Render dashboard will show exact errors
-- Make sure all files are committed to GitHub
-- Verify the runtime.txt file is included
+- Render sometimes ignores runtime.txt on free tier
+- Python 3.13.4 has limited TensorFlow support
+- Use minimal requirements for maximum compatibility
 
 ## 🌐 Accessing Your App
 
