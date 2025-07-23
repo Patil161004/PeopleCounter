@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>People Counter Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            padding: 2rem 0;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .btn-download {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .btn-back {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            color: white;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: white;
+            text-decoration: none;
+        }
+        .result-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #007bff;
+        }
+        .count-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-weight: bold;
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header -->
+                <div class="card">
+                    <div class="card-header">
+                        <h1 class="mb-0">
+                            <i class="fas fa-chart-bar"></i>
+                            Processing Results
+                        </h1>
+                        <p class="mb-0">Your images have been successfully processed!</p>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-images fa-3x mb-3"></i>
+                            <h3>{{ total_images }}</h3>
+                            <p>Images Processed</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-users fa-3x mb-3 pulse"></i>
+                            <h3>{{ total_people }}</h3>
+                            <p>Total People Detected</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-calculator fa-3x mb-3"></i>
+                            <h3>{{ "%.1f"|format(total_people / total_images if total_images > 0 else 0) }}</h3>
+                            <p>Average per Image</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Download Section -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="fas fa-download me-2"></i>Download Results
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <a href="/download/{{ excel_file }}" class="btn-download">
+                                        <i class="fas fa-file-excel me-2"></i>Download Excel Report
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-grid">
+                                    <a href="/download/{{ zip_file }}" class="btn-download">
+                                        <i class="fas fa-file-archive me-2"></i>Download Processed Images
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="fas fa-table me-2"></i>Detailed Results
+                        </h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">
+                                            <i class="fas fa-image me-2"></i>Image Name
+                                        </th>
+                                        <th scope="col" class="text-center">
+                                            <i class="fas fa-users me-2"></i>People Count
+                                        </th>
+                                        <th scope="col" class="text-center">
+                                            <i class="fas fa-check-circle me-2"></i>Status
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in results %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-file-image me-2 text-primary"></i>
+                                            {{ result.image_name }}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="count-badge">{{ result.people_count }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if result.processed_image_path %}
+                                                <i class="fas fa-check-circle text-success"></i>
+                                                <span class="text-success">Processed</span>
+                                            {% else %}
+                                                <i class="fas fa-exclamation-circle text-warning"></i>
+                                                <span class="text-warning">Warning</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Results -->
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            <i class="fas fa-list me-2"></i>Processing Summary
+                        </h4>
+                        {% for result in results %}
+                        <div class="result-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1">
+                                        <i class="fas fa-image me-2"></i>{{ result.image_name }}
+                                    </h6>
+                                    <small class="text-muted">
+                                        {% if result.processed_image_path %}
+                                            Successfully processed with bounding boxes
+                                        {% else %}
+                                            Processing completed but no annotations saved
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="count-badge">
+                                        <i class="fas fa-users me-1"></i>{{ result.people_count }} 
+                                        {% if result.people_count == 1 %}person{% else %}people{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="text-center">
+                    <a href="/" class="btn-back me-3">
+                        <i class="fas fa-arrow-left me-2"></i>Process More Images
+                    </a>
+                    <a href="/clear" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-2"></i>Clear All Files
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add some interactive feedback for download buttons
+        document.querySelectorAll('.btn-download').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Downloading...';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-check me-2"></i>Downloaded!';
+                    setTimeout(() => {
+                        this.innerHTML = originalText;
+                    }, 2000);
+                }, 1000);
+            });
+        });
+
+        // Animate count badges on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const badges = document.querySelectorAll('.count-badge');
+            badges.forEach((badge, index) => {
+                setTimeout(() => {
+                    badge.style.animation = 'pulse 0.5s ease-in-out';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>
