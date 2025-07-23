@@ -41,14 +41,26 @@ class EfficientDetCounter:
                 self.model = None
     
     def detect_objects(self, image_path):
-        """Detect objects in image using EfficientDet with enhanced preprocessing"""
+        """Detect objects in image using EfficientDet with enhanced preprocessing and memory optimization"""
         if self.model is None:
             return None
         
         try:
-            # Load and preprocess image exactly as in your notebook
+            # Load and preprocess image with memory optimization
             image_string = tf.io.read_file(image_path)
             image_tensor = tf.image.decode_jpeg(image_string, channels=3)
+            
+            # Resize large images to save memory
+            height = tf.shape(image_tensor)[0]
+            width = tf.shape(image_tensor)[1]
+            
+            # If image is too large, resize it
+            max_size = 1024
+            if tf.reduce_max([height, width]) > max_size:
+                scale = tf.cast(max_size, tf.float32) / tf.cast(tf.reduce_max([height, width]), tf.float32)
+                new_height = tf.cast(tf.cast(height, tf.float32) * scale, tf.int32)
+                new_width = tf.cast(tf.cast(width, tf.float32) * scale, tf.int32)
+                image_tensor = tf.image.resize(image_tensor, [new_height, new_width])
             
             # Ensure image is in proper format and size
             image_tensor = tf.cast(image_tensor, tf.uint8)
@@ -57,6 +69,10 @@ class EfficientDetCounter:
             image_tensor = image_tensor[tf.newaxis, ...]
             
             print(f"Processing image with shape: {image_tensor.shape}")
+            
+            # Clear any previous computation graphs to save memory
+            tf.keras.backend.clear_session()
+            
             return self.model(image_tensor)
         except Exception as e:
             print(f"Error in object detection: {e}")

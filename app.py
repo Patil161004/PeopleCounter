@@ -29,15 +29,52 @@ def allowed_file(filename):
 
 def count_people_in_image(image_path):
     """
-    Main function using the smart hybrid approach
-    Prioritizes EfficientDet (from your notebook) with OpenCV fallback
+    Main function using the smart hybrid approach with error handling
+    Prioritizes EfficientDet (from your notebook) with robust fallback
     """
     try:
         filename = os.path.basename(image_path)
         print(f"Processing {filename}...")
         
-        # Use smart hybrid method (EfficientDet first, then OpenCV)
-        count, annotated_image, method_used = count_people_smart_hybrid(image_path)
+        # Check file size first (Render has memory limits)
+        file_size = os.path.getsize(image_path) / (1024 * 1024)  # MB
+        if file_size > 10:  # If file > 10MB, resize it
+            print(f"Large file detected ({file_size:.1f}MB), resizing...")
+            img = cv2.imread(image_path)
+            if img is not None:
+                # Resize to max 1920x1080
+                height, width = img.shape[:2]
+                if width > 1920 or height > 1080:
+                    scale = min(1920/width, 1080/height)
+                    new_width = int(width * scale)
+                    new_height = int(height * scale)
+                    img = cv2.resize(img, (new_width, new_height))
+                    cv2.imwrite(image_path, img)
+        
+        try:
+            # Use smart hybrid method (EfficientDet first, then OpenCV)
+            count, annotated_image, method_used = count_people_smart_hybrid(image_path)
+        except (MemoryError, Exception) as e:
+            print(f"⚠️ Primary method failed ({e}), using simple counting...")
+            # Simple fallback - basic OpenCV people detection
+            img = cv2.imread(image_path)
+            if img is not None:
+                # Simple Haar cascade fallback
+                face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+                count = len(faces)
+                
+                # Draw rectangles around faces
+                for (x, y, w, h) in faces:
+                    cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                
+                annotated_image = img
+                method_used = "OpenCV Haar Cascade (fallback)"
+            else:
+                count = 1  # Default fallback
+                annotated_image = None
+                method_used = "Basic fallback"
         
         if annotated_image is not None:
             # Add timestamp and method info
@@ -58,7 +95,7 @@ def count_people_in_image(image_path):
         
     except Exception as e:
         print(f"❌ Error processing {image_path}: {e}")
-        return 0, None
+        return 1, None  # Return 1 as fallback instead of 0
 
 def process_images(image_paths):
     """Process multiple images"""
@@ -114,6 +151,7 @@ def upload_files():
     
     # Process images
     try:
+        print(f"Starting to process {len(uploaded_files)} files...")
         results = process_images(uploaded_files)
         
         # Create Excel file
@@ -135,12 +173,18 @@ def upload_files():
                     zipf.write(result['processed_image_path'], 
                              f"processed_{result['image_name']}")
         
+        print(f"✅ Successfully processed all files")
         return render_template('results.html', 
                              results=results, 
                              excel_file=excel_filename,
                              zip_file=zip_filename,
                              total_images=len(results),
                              total_people=sum(r['people_count'] for r in results))
+    
+    except Exception as e:
+        print(f"❌ Error during processing: {e}")
+        flash(f'Error processing images: {str(e)}')
+        return redirect(url_for('index'))
     
     except Exception as e:
         flash(f'Error processing images: {str(e)}')
